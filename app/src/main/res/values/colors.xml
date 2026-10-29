@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="bg_dark">#121418</color>
+    <color name="card_dark">#1A1E24</color>
+    <color name="surface_dark">#242932</color>
+    <color name="dpad_bg">#181C22</color>
+    <color name="dpad_center">#2A303C</color>
+    <color name="accent_blue">#3B82F6</color>
+    <color name="accent_red">#EF4444</color>
+    <color name="status_green">#10B981</color>
+    <color name="status_yellow">#F59E0B</color>
+    <color name="text_primary">#F3F4F6</color>
+    <color name="text_secondary">#9CA3AF</color>
+</resources>

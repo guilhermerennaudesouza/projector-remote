@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Controle Projetor</string>
+    <string name="default_ip">192.168.2.41</string>
+    <string name="status_connected">Conectado</string>
+    <string name="status_connecting">Conectando…</string>
+    <string name="status_disconnected">Desconectado</string>
+    <string name="status_error">Erro ao conectar</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_home">Home</string>
+    <string name="btn_back">Voltar</string>
+    <string name="btn_menu">Menu</string>
+    <string name="btn_vol_up">Vol +</string>
+    <string name="btn_vol_down">Vol -</string>
+    <string name="btn_mute">Mute</string>
+    <string name="btn_text">Teclado</string>
+    <string name="btn_projectivy">Projectivy</string>
+    <string name="btn_youtube">YouTube</string>
+    <string name="btn_settings">Ajustes</string>
+</resources>

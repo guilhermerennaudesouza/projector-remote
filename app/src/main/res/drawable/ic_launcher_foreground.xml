@@ -1,0 +1,17 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Projector / Remote TV Icon -->
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M38,30h32c3.31,0 6,2.69 6,6v36c0,3.31 -2.69,6 -6,6H38c-3.31,0 -6,-2.69 -6,-6V36C32,32.69 34.69,30 38,30z"/>
+    <!-- Screen / D-pad circle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,46m-8,0a8,8 0 1,0 16,0a8,8 0 1,0 -16,0"/>
+    <path
+        android:fillColor="#EF4444"
+        android:pathData="M54,64m-4,0a4,4 0 1,0 8,0a4,4 0 1,0 -8,0"/>
+</vector>

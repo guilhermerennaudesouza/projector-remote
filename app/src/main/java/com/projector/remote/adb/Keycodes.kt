@@ -15,4 +15,5 @@ object Keycodes {
     const val KEYCODE_MUTE = 164
     const val KEYCODE_MEDIA_PLAY_PAUSE = 85
     const val KEYCODE_SETTINGS = 176
+    const val KEYCODE_TV_INPUT = 178
 }

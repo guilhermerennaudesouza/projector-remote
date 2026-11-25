@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_dark"
+    android:fillViewport="true"
+    tools:context=".MainActivity">
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     android:gravity="center_horizontal"
     android:orientation="vertical"
     android:paddingHorizontal="20dp"
-    android:paddingVertical="16dp"
-    tools:context=".MainActivity">
+    android:paddingVertical="16dp">
 
     <!-- 1. Header: Connected Device Card (Tellyscope Style) -->
     <LinearLayout
@@ -86,7 +91,7 @@
             android:id="@+id/btnKeyboard"
             android:layout_width="0dp"
             android:layout_height="56dp"
-            android:layout_marginEnd="8dp"
+            android:layout_marginEnd="4dp"
             android:layout_weight="1"
             android:background="@drawable/bg_tool_btn"
             android:clickable="true"
@@ -105,6 +110,34 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:text="Teclado"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnInput"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_marginHorizontal="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_tool_btn"
+            android:clickable="true"
+            android:contentDescription="@string/btn_input"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:src="@drawable/ic_input"
+                app:tint="@color/text_secondary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/btn_input"
                 android:textColor="@color/text_secondary"
                 android:textSize="11sp" />
         </LinearLayout>
@@ -140,7 +173,7 @@
             android:id="@+id/btnPower"
             android:layout_width="0dp"
             android:layout_height="56dp"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="4dp"
             android:layout_weight="1"
             android:background="@drawable/bg_tool_power"
             android:clickable="true"
@@ -290,55 +323,101 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
-    <!-- 5. Volume Controls (Unified M3 Pill) -->
+    <!-- 5. Volume / Mute / Mouse / Foco (mesmo arranjo do controle fisico) -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:background="@drawable/bg_pill_container"
+        android:layout_height="128dp"
         android:gravity="center"
         android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/btnVolDown"
+        <!-- Volume (pilula vertical) -->
+        <LinearLayout
+            android:layout_width="64dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_pill_vertical"
+            android:orientation="vertical">
+
+            <ImageButton
+                android:id="@+id/btnVolUp"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/btn_vol_up"
+                android:src="@drawable/ic_vol_up" />
+
+            <ImageButton
+                android:id="@+id/btnVolDown"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/btn_vol_down"
+                android:src="@drawable/ic_vol_down" />
+        </LinearLayout>
+
+        <!-- Mute + Mouse -->
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="?attr/selectableItemBackground"
-            android:text="— Vol"
-            android:textAllCaps="false"
-            android:textColor="@color/text_primary"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:gravity="center"
+            android:orientation="vertical">
 
-        <View
-            android:layout_width="1dp"
-            android:layout_height="24dp"
-            android:background="#2A3240" />
+            <ImageButton
+                android:id="@+id/btnMute"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_btn_circle"
+                android:contentDescription="@string/btn_mute"
+                android:src="@drawable/ic_mute" />
 
-        <ImageButton
-            android:id="@+id/btnMute"
-            android:layout_width="60dp"
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="12dp" />
+
+            <ImageButton
+                android:id="@+id/btnMouse"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_btn_circle"
+                android:contentDescription="@string/btn_mouse"
+                android:src="@drawable/ic_mouse" />
+        </LinearLayout>
+
+        <!-- Foco (pilula vertical) -->
+        <LinearLayout
+            android:layout_width="64dp"
             android:layout_height="match_parent"
-            android:background="?attr/selectableItemBackground"
-            android:contentDescription="@string/btn_mute"
-            android:src="@drawable/ic_mute" />
+            android:background="@drawable/bg_pill_vertical"
+            android:orientation="vertical">
 
-        <View
-            android:layout_width="1dp"
-            android:layout_height="24dp"
-            android:background="#2A3240" />
+            <Button
+                android:id="@+id/btnFocusPlus"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/btn_focus_plus"
+                android:text="F+"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
-        <Button
-            android:id="@+id/btnVolUp"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="?attr/selectableItemBackground"
-            android:text="+ Vol"
-            android:textAllCaps="false"
-            android:textColor="@color/text_primary"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            <Button
+                android:id="@+id/btnFocusMinus"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/btn_focus_minus"
+                android:text="F−"
+                android:textAllCaps="false"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </LinearLayout>
     </LinearLayout>
 
     <Space
@@ -381,3 +460,5 @@
     </LinearLayout>
 
 </LinearLayout>
+
+</ScrollView>

@@ -16,4 +16,8 @@
     <string name="btn_projectivy">Projectivy</string>
     <string name="btn_youtube">YouTube</string>
     <string name="btn_settings">Ajustes</string>
+    <string name="btn_input">Entrada</string>
+    <string name="btn_mouse">Mouse / Touchpad</string>
+    <string name="btn_focus_plus">Foco +</string>
+    <string name="btn_focus_minus">Foco -</string>
 </resources>

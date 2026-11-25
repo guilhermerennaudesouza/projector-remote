@@ -15,6 +15,12 @@ Aplicativo Android nativo criado especificamente para controlar o projetor no IP
 - **Controle de Volume e Áudio:**
   - Volume +, Volume -, Mute instantâneo
 - **Liga / Desliga:** Botão Power direto via `KEYCODE_POWER`
+- **Todos os botões do controle físico:**
+  - **Entrada (Input/Source):** `KEYCODE_TV_INPUT` por padrão (segure o botão para mudar o código)
+  - **Foco F+ / F-:** segure para ajustar continuamente. Como cada fabricante usa um código diferente, no primeiro toque o app pede para você apertar F+/F- no controle físico e detecta o código sozinho (via `getevent` + arquivo `.kl` do projetor)
+  - **Mouse:** abre o modo touchpad — arraste para mover o cursor (posição mostrada numa miniatura da tela), toque para clicar, segure para clique longo e use 2 dedos para rolar
+  - D-Pad, Volume e Foco repetem enquanto o botão é mantido pressionado, como no controle original
+  - Os códigos podem ser revistos em **Ajustes → Teclas do controle**
 - **Atalhos Rápidos Personalizados:**
   - **Projectivy Launcher:** Abre o launcher padrão instantaneamente
   - **YouTube:** Abre o aplicativo do YouTube do projetor

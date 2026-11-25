@@ -9,6 +9,7 @@ import android.graphics.RectF
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
+import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
@@ -76,7 +77,7 @@ class TouchpadView @JvmOverloads constructor(
     private val longPressRunnable = Runnable {
         if (!moved && !multiTouch) {
             longPressed = true
-            performHapticFeedback(HAPTIC_FEEDBACK_ENUM_LONG_PRESS)
+            performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
             listener?.onLongPress(cursorX.roundToInt(), cursorY.roundToInt())
         }
     }

@@ -45,13 +45,25 @@ jobs:
         name: ProjectorRemote-APK
         path: release-apk/ProjectorRemote.apk
 
+    - name: Read app version
+      id: version
+      run: |
+        VERSION=$(sed -nE 's/^\s*versionName\s*=\s*"([^"]+)".*/\1/p' app/build.gradle.kts | head -1)
+        if [ -z "$VERSION" ]; then echo "versionName nao encontrado" >&2; exit 1; fi
+        echo "name=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "Versao: $VERSION"
+
     - name: Create GitHub Release with direct APK download
       # Builds de outros branches geram apenas o artefato, sem mexer no release.
+      # Cada versionName vira uma tag (v1.2, v1.3...); um novo push na mesma
+      # versao so atualiza o APK dessa release.
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v1.0.0
-        name: "Projector Remote v1.0.0"
+        tag_name: v${{ steps.version.outputs.name }}
+        target_commitish: ${{ github.sha }}
+        name: "Projector Remote v${{ steps.version.outputs.name }}"
+        make_latest: true
         body: |
           ### Controle Remoto para Projetor Android (192.168.2.41)
           
@@ -60,6 +72,7 @@ jobs:
           - IP padrão: `192.168.2.41:5555`
           - Interface Material 3 estilo Tellyscope
           - Controle completo D-Pad, Volume, Power, Atalho Projectivy e Teclado
+          - Modo rápido (sendevent) para teclas com menos latência
         files: release-apk/ProjectorRemote.apk
         draft: false
         prerelease: false

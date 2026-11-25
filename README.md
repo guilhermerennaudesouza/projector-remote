@@ -27,6 +27,7 @@ Aplicativo Android nativo criado especificamente para controlar o projetor no IP
   - **Ajustes:** Abre a tela de configurações do Android TV
 - **Digitação de Texto Remota:** Diálogo para digitar pelo teclado do celular e enviar palavras/buscas inteiras diretamente para o projetor.
 - **Feedback Tátil:** Vibração suave a cada clique (haptic feedback).
+- **Modo Rápido (sendevent):** As teclas vão direto para o dispositivo de entrada do projetor com `sendevent`, sem abrir uma JVM a cada clique como o `input keyevent`. O app descobre sozinho quais teclas o projetor aceita assim e usa `input keyevent` para o resto. Dá para desligar em Ajustes.
 - **Indicador de Conexão em Tempo Real:**
   - 🟢 Verde: Conectado e pronto para comandos
   - 🟡 Amarelo: Conectando / aguardando autorização

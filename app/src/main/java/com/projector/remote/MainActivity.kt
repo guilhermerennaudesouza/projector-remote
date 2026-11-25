@@ -10,6 +10,7 @@ import android.text.InputType
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -362,12 +363,18 @@ class MainActivity : AppCompatActivity(), AdbManager.StateListener {
                 showKeyConfigDialog()
             }
         }
+        val fastKeys = CheckBox(this).apply {
+            text = "Modo rapido (sendevent)\n${adbManager.fastKeysStatus}"
+            isChecked = adbManager.fastKeysEnabled
+            setOnCheckedChangeListener { _, checked -> adbManager.fastKeysEnabled = checked }
+        }
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             val pad = (16 * density).toInt()
             setPadding(pad, pad / 2, pad, 0)
             addView(input)
             addView(keysButton)
+            addView(fastKeys)
         }
 
         dialog = AlertDialog.Builder(this)

@@ -4,8 +4,10 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.KeyEvent
 import com.tananaev.adblib.AdbConnection
 import com.tananaev.adblib.AdbCrypto
+import com.tananaev.adblib.AdbStream
 import java.io.File
 import java.net.InetSocketAddress
 import java.net.Socket
@@ -51,6 +53,22 @@ class AdbManager(private val context: Context) {
         private set
 
     var currentState: State = State.DISCONNECTED
+        private set
+
+    // --- Modo rapido (sendevent) ---
+    private val prefs = context.getSharedPreferences("adb_settings", Context.MODE_PRIVATE)
+
+    /** Usa sendevent nas teclas que o projetor permite; o resto continua via `input keyevent`. */
+    var fastKeysEnabled: Boolean
+        get() = prefs.getBoolean("fast_keys", true)
+        set(value) { prefs.edit().putBoolean("fast_keys", value).apply() }
+
+    @Volatile private var fastKeyMap: Map<String, SendEventMapper.Target> = emptyMap()
+    @Volatile private var fastShell: AdbStream? = null
+    @Volatile private var connectionGeneration = 0
+
+    /** Texto curto para a tela de ajustes. */
+    @Volatile var fastKeysStatus: String = "Aguardando conexao"
         private set
 
     fun setStateListener(listener: StateListener?) {
@@ -113,6 +131,7 @@ class AdbManager(private val context: Context) {
 
                 conn.connect()
                 updateState(State.CONNECTED, "Conectado ao projetor!")
+                probeFastKeys(++connectionGeneration)
             } catch (e: Exception) {
                 Log.e(TAG, "Erro de conexao ADB", e)
                 disconnectInternal()
@@ -136,6 +155,10 @@ class AdbManager(private val context: Context) {
     }
 
     private fun disconnectInternal() {
+        connectionGeneration++
+        fastKeyMap = emptyMap()
+        fastKeysStatus = "Aguardando conexao"
+        closeFastShell()
         try {
             connection?.close()
         } catch (_: Exception) {}
@@ -147,14 +170,130 @@ class AdbManager(private val context: Context) {
     }
 
     fun sendKeyEvent(keycode: Int) {
-        sendCommand("input keyevent $keycode")
+        sendKeyEvent(keycode.toString())
     }
 
     /** Aceita numero ("178") ou nome ("KEYCODE_TV_INPUT"), como o `input keyevent`. */
     fun sendKeyEvent(key: String) {
         val safe = key.trim()
         if (!safe.matches(Regex("[A-Za-z0-9_]+"))) return
-        sendCommand("input keyevent $safe")
+
+        val target = if (fastKeysEnabled) fastKeyMap[keyName(safe)] else null
+        if (target == null) {
+            sendCommand("input keyevent $safe")
+            return
+        }
+        pendingCommands.incrementAndGet()
+        executor.execute {
+            try {
+                if (!sendFast(SendEventMapper.keyPressCommand(target))) {
+                    sendCommandInternal("input keyevent $safe")
+                }
+            } finally {
+                pendingCommands.decrementAndGet()
+            }
+        }
+    }
+
+    /** "19" -> "KEYCODE_DPAD_UP"; nomes ja prefixados passam direto. */
+    private fun keyName(key: String): String {
+        val code = key.toIntOrNull() ?: return if (key.startsWith("KEYCODE_")) key else "KEYCODE_$key"
+        return KeyEvent.keyCodeToString(code)
+    }
+
+    /**
+     * Escreve no shell interativo que fica aberto, sem abrir um stream ADB novo
+     * por tecla. Roda no [executor]. Retorna false se o shell caiu.
+     */
+    private fun sendFast(command: String): Boolean {
+        val conn = connection ?: return false
+        if (currentState != State.CONNECTED) return false
+        return try {
+            val shell = fastShell?.takeIf { !it.isClosed } ?: openFastShell(conn)
+            shell.write((command + "\n").toByteArray(Charsets.UTF_8))
+            true
+        } catch (e: Exception) {
+            Log.w(TAG, "Shell rapido caiu, usando input keyevent", e)
+            closeFastShell()
+            false
+        }
+    }
+
+    private fun openFastShell(conn: AdbConnection): AdbStream {
+        val shell = conn.open("shell:")
+        fastShell = shell
+        // Descarta eco e prompt; sem leitura o buffer do adblib so cresce.
+        Thread {
+            try {
+                while (!shell.isClosed) {
+                    shell.read() ?: break
+                }
+            } catch (_: Exception) {}
+        }.apply { isDaemon = true; name = "adb-fast-shell-drain" }.start()
+        return shell
+    }
+
+    private fun closeFastShell() {
+        val s = fastShell
+        fastShell = null
+        try { s?.close() } catch (_: Exception) {}
+    }
+
+    /**
+     * Descobre quais teclas podem ir por sendevent. Roda uma vez por conexao,
+     * em segundo plano; enquanto nao termina, tudo vai por `input keyevent`.
+     */
+    private fun probeFastKeys(generation: Int) {
+        queryExecutor.execute {
+            try {
+                fastKeysStatus = "Verificando..."
+                val getevent = execForOutput("getevent -p", 5000) ?: return@execute
+                val devices = SendEventMapper.parseGetevent(getevent).filter { it.keyCodes.isNotEmpty() }
+                if (devices.isEmpty()) {
+                    fastKeysStatus = "Indisponivel (nenhum dispositivo de teclas)"
+                    return@execute
+                }
+
+                // SYN_REPORT sozinho nao gera tecla: so testa se o sendevent consegue escrever.
+                val probe = devices.joinToString(";") {
+                    "sendevent ${it.path} 0 0 0 2>/dev/null && echo \"W ${it.path}\""
+                }
+                val writable = Regex("^W (\\S+)", RegexOption.MULTILINE)
+                    .findAll(execForOutput(probe, 5000) ?: "")
+                    .map { it.groupValues[1] }.toSet()
+                if (writable.isEmpty()) {
+                    fastKeysStatus = "Indisponivel (projetor bloqueia o sendevent)"
+                    return@execute
+                }
+
+                val layoutFiles = SendEventMapper.parseLayoutFiles(
+                    execForOutput("dumpsys input | grep -E 'Path:|KeyLayoutFile:'", 8000) ?: ""
+                )
+                val klFiles = devices.filter { it.path in writable }
+                    .mapNotNull { layoutFiles[it.path] }.distinct()
+                if (klFiles.isEmpty()) {
+                    fastKeysStatus = "Indisponivel (sem arquivo .kl)"
+                    return@execute
+                }
+                val layouts = SendEventMapper.parseKeyLayouts(
+                    execForOutput(
+                        "grep -H -E '^[[:space:]]*key[[:space:]]+[0-9]+' " +
+                            klFiles.joinToString(" ") { "'$it'" },
+                        6000
+                    ) ?: ""
+                )
+
+                val map = SendEventMapper.buildMap(devices, layoutFiles, layouts, writable)
+                if (generation != connectionGeneration) return@execute
+                fastKeyMap = map
+                fastKeysStatus = if (map.isEmpty()) "Indisponivel (nenhuma tecla mapeada)"
+                else "Ativo: ${map.size} teclas via sendevent"
+                Log.i(TAG, "sendevent: $fastKeysStatus -> ${map.keys.sorted()}")
+            } catch (e: Exception) {
+                Log.w(TAG, "Falha ao preparar sendevent", e)
+                fastKeysStatus = "Indisponivel (erro na verificacao)"
+            }
+        }
     }
 
     /** True quando nao ha comandos na fila (usado pela repeticao ao segurar botoes). */
@@ -238,10 +377,21 @@ class AdbManager(private val context: Context) {
         callback: (String?) -> Unit
     ) {
         queryExecutor.execute {
+            val result = execForOutput(command, timeoutMs, stopWhen)
+            mainHandler.post { callback(result) }
+        }
+    }
+
+    /** Versao bloqueante de [runForOutput]; chamar fora do main thread. */
+    private fun execForOutput(
+        command: String,
+        timeoutMs: Long,
+        stopWhen: ((String) -> Boolean)? = null
+    ): String? {
+        run {
             val conn = connection
             if (conn == null || currentState != State.CONNECTED) {
-                mainHandler.post { callback(null) }
-                return@execute
+                return null
             }
             val out = StringBuilder()
             var ok = false
@@ -269,8 +419,7 @@ class AdbManager(private val context: Context) {
             } catch (e: Exception) {
                 Log.e(TAG, "Erro ao executar: $command", e)
             }
-            val result = if (ok || out.isNotEmpty()) out.toString() else null
-            mainHandler.post { callback(result) }
+            return if (ok || out.isNotEmpty()) out.toString() else null
         }
     }
 
